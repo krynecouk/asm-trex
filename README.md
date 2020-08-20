@@ -1,8 +1,8 @@
 # asm-trex
 
-T-Rex can't even assembly for Atari 2600 (MOS 6507).
+T-Rex can't even assembly for Atari 2600 (MOS 6507)... but can anxiously walk here and there!
 
-![Screenshot of playfield](screenshot.png)
+![Living and walking T-Rex](living-walking-trex.gif)
 
 ## Prerequisites
 
@@ -21,3 +21,9 @@ make
 ```cmake
 make run
 ```
+
+## Controls
+
+### Movement
+
+Arrow keys.
