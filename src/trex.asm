@@ -32,11 +32,14 @@ VerticalSync:
     rts
 
 VerticalBlank:
-    jsr PositionPlayerX
+    ldy #0
+    lda PlayerX
+    and #%01111111              ; forces positive result
+    jsr PositionObjectX
     lda #2
     sta VBLANK
 
-    ldx #35                     ; 2 WSYNC consumed by PositionPlayerX subroutine
+    ldx #35                     ; 2 WSYNC consumed by PositionObjectX subroutine
 .VerticalBlankLoop:
     sta WSYNC
     dex
@@ -46,25 +49,28 @@ VerticalBlank:
     stx VBLANK
     rts
 
-PositionPlayerX: 
-    lda PlayerX
-    and #%01111111              ; forces positive result
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; A=X
+; Y=0 : Player0
+; Y=1 : Player1
+; Y=2 : Missile0
+; Y=3 : Missile1
+; Y=4 : Ball
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+PositionObjectX:
     sta WSYNC
-
-    sta HMCLR                   ; clear X
     sec                         ; set carry = 1
 .DivideLoop:
     sbc #15
-    bcs .DivideLoop              ; if carry is cleared (borrowed) then skip the jump
+    bcs .DivideLoop             ; if carry is cleared (borrowed) then skip the jump
 
     eor #%0111
     asl                         ; HMP0 uses only 4 bits most significant bits
     asl
     asl
     asl
-    sta HMP0                    ; set fine position
-    sta RESP0                   ; reset 15-step position
+    sta HMP0,Y                  ; set fine position
+    sta RESP0,Y                 ; reset 15-step position
     sta WSYNC
     sta HMOVE                   ; apply fine position offset
 
