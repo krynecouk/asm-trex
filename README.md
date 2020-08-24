@@ -1,6 +1,6 @@
 # asm-trex
 
-T-Rex can't even assembly for Atari 2600 (MOS 6507)... but can anxiously walk here and there!
+T-Rex can't even write assembly code for Atari 2600 (MOS 6507)... but can anxiously walk here and there on the deserted island in the middle of the ocean!!?#\$%
 
 ![Living and walking T-Rex](living-walking-trex.gif)
 
