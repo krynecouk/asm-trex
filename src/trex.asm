@@ -264,6 +264,16 @@ Start:
     lda #$C8                    ; NTSC green
     sta COLUBK
 
+    lda #$96                    ; NTSC blue
+    sta COLUPF
+    lda #%00000001
+    sta CTRLPF
+    lda #$F0
+    sta PF0
+    lda #0
+    sta PF1
+    sta PF2
+
     lda #<PlayerFrame
     sta PlayerSpritePtr
     lda #>PlayerFrame
