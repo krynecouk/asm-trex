@@ -9,9 +9,14 @@
     seg.u Variables
     org $80
 
-PlayerH byte
 PlayerX byte
 PlayerY byte
+PlayerH byte
+PlayerSpritePtr word
+PlayerColorsPtr word
+PlayerAnimOffset byte
+PlayerAnimCounter byte
+PlayerAnimSpeed byte
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Subroutines
@@ -22,11 +27,9 @@ PlayerY byte
 VerticalSync:
     lda #2
     sta VSYNC
-
     sta WSYNC
     sta WSYNC
     sta WSYNC
-
     lda #0
     sta VSYNC
     rts
@@ -38,32 +41,23 @@ VerticalBlank:
     jsr PositionObjectX
     lda #2
     sta VBLANK
-
-    ldx #35                     ; 2 WSYNC consumed by PositionObjectX subroutine
+    ldx #34                     ; 3 WSYNC consumed by PositionObjectX subroutine
 .VerticalBlankLoop:
     sta WSYNC
     dex
     bne .VerticalBlankLoop
-
     lda #0
     stx VBLANK
     rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; A=X
-;; Y=0 : Player0
-;; Y=1 : Player1
-;; Y=2 : Missile0
-;; Y=3 : Missile1
-;; Y=4 : Ball
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; A is a x-coordinate
+;; Y is the object type (0:Player0, 1:,layer1, 2:Missile0, 3:Missile1, 4:Ball)
 PositionObjectX:
     sta WSYNC
     sec                         ; set carry = 1
 .DivideLoop:
     sbc #15
     bcs .DivideLoop             ; if carry is cleared (borrowed) then skip the jump
-
     eor #%0111
     asl                         ; HMP0 uses only 4 bits most significant bits
     asl
@@ -73,11 +67,10 @@ PositionObjectX:
     sta RESP0,Y                 ; reset 15-step position
     sta WSYNC
     sta HMOVE                   ; apply fine position offset
-
     rts
 
-PrintScanlines:
-    ldx #192
+PrintScanlines:                 ; 2-line kernel
+    ldx #96
 .Scanline:
     txa
     sec
@@ -86,18 +79,46 @@ PrintScanlines:
     bcc .PrintPlayer             ;  if carry flag set then PrintPlayer
     lda #0
 .PrintPlayer:
+    clc
+    adc PlayerAnimOffset
     tay
     sta WSYNC
-
-    lda PlayerBitmap,Y
+    sta WSYNC
+    lda (PlayerSpritePtr),Y
     sta GRP0
-
-    lda PlayerColor,Y
+    lda (PlayerColorsPtr),Y
     sta COLUP0
-
+    lda #%101
+    sta NUSIZ0
     dex
     bne .Scanline
     sta WSYNC
+    rts
+
+AnimateRun:
+    lda PlayerAnimCounter
+    and PlayerAnimSpeed
+    beq .break                  ; branch on zero result
+    lda #0
+    sta PlayerAnimCounter
+    lda PlayerH
+    adc PlayerH
+    cmp PlayerAnimOffset
+    bne .Frame1
+    jsr .Frame0
+    rts
+.Frame0:
+    lda PlayerH
+    sta PlayerAnimOffset
+    rts
+.Frame1:
+    clc
+    lda PlayerH
+    adc PlayerH
+    sta PlayerAnimOffset
+    rts
+.break:
+    inc PlayerAnimCounter
     rts
 
 Overscan:
@@ -108,7 +129,6 @@ Overscan:
     sta WSYNC
     dex
     bne .OverscanLoop
-
     lda #0
     sta VBLANK
     rts
@@ -116,45 +136,90 @@ Overscan:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Lookup Tables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-PlayerBitmap:
-    byte #%00000000
-    byte #%00101000
-    byte #%01111000
-    byte #%10111000
-    byte #%10111000
-    byte #%00111100
-    byte #%00110000
-    byte #%00111111
-    byte #%00101111
-    byte #%00111111
 
-PlayerColor:
-    byte #$00
-    byte #$48
-    byte #$48
-    byte #$48
-    byte #$48
-    byte #$48
-    byte #$48
-    byte #$48
-    byte #$48
-    byte #$48
+;; Bitmaps
+PlayerFrame
+    .byte #%00000000            ;%00
+    .byte #%00010100            ;$26
+    .byte #%00011100            ;$26
+    .byte #%00111100            ;$26
+    .byte #%01011100            ;$26
+    .byte #%00011100            ;$26
+    .byte #%00011111            ;$26
+    .byte #%00010111            ;$44
+    .byte #%00011111            ;$26
+PlayerRunFrame0
+    .byte #%00000000            ;%00
+    .byte #%00010000            ;$26
+    .byte #%00011100            ;$26
+    .byte #%01111100            ;$26
+    .byte #%00011100            ;$26
+    .byte #%00011000            ;$26
+    .byte #%00011111            ;$26
+    .byte #%00010111            ;$44
+    .byte #%00011111            ;$26
+PlayerRunFrame1
+    .byte #%00000000            ;%00
+    .byte #%00000100            ;$26
+    .byte #%00011100            ;$26
+    .byte #%00111100            ;$26
+    .byte #%01011100            ;$26
+    .byte #%00011000            ;$26
+    .byte #%00011111            ;$26
+    .byte #%00010111            ;$44
+    .byte #%00011111            ;$26
+
+;; Colors
+PlayerColors
+    .byte #$00
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+PlayerRunColors0
+    .byte #$00
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+PlayerRunColors1
+    .byte #$00
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
+    .byte #$26
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; IO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-IO: 
+IO:
 .PlayerUp:
     lda #%00010000
     bit SWCHA
     bne .PlayerDown
     inc PlayerY
+    jsr AnimateRun
+    rts
 
 .PlayerDown:
     lda #%00100000
     bit SWCHA
     bne .PlayerLeft
     dec PlayerY
+    jsr AnimateRun
+    rts
 
 .PlayerLeft:
     lda #%01000000
@@ -163,6 +228,8 @@ IO:
     dec PlayerX
     lda #%1000
     sta REFP0
+    jsr AnimateRun
+    rts
 
 .PlayerRight:
     lda #%10000000
@@ -171,8 +238,12 @@ IO:
     inc PlayerX
     lda #%0
     sta REFP0
+    jsr AnimateRun
+    rts
 
 .PlayerNoIO:
+    lda #0
+    sta PlayerAnimOffset
     rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -181,17 +252,34 @@ IO:
 Start:
     CLEAN_START
 
-    lda #10
-    sta PlayerH
-
     lda #40
     sta PlayerX
 
-    lda #90
+    lda #40
     sta PlayerY
+
+    lda #9
+    sta PlayerH
 
     lda #$C8                    ; NTSC green
     sta COLUBK
+
+    lda #<PlayerFrame
+    sta PlayerSpritePtr
+    lda #>PlayerFrame
+    sta PlayerSpritePtr + 1
+
+    lda #<PlayerColors
+    sta PlayerColorsPtr
+    lda #>PlayerColors
+    sta PlayerColorsPtr + 1
+
+    lda #0
+    sta PlayerAnimOffset
+
+    lda #8
+    sta PlayerAnimSpeed
+    sta PlayerAnimCounter
 
 Main:
     jsr VerticalSync
