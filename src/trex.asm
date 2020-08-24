@@ -4,7 +4,7 @@
     include "macro.h"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Global Variables
+;; Global Variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     seg.u Variables
     org $80
@@ -14,7 +14,7 @@ PlayerX byte
 PlayerY byte
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Subroutines
+;; Subroutines
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     seg code
     org $F000
@@ -50,12 +50,12 @@ VerticalBlank:
     rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; A=X
-; Y=0 : Player0
-; Y=1 : Player1
-; Y=2 : Missile0
-; Y=3 : Missile1
-; Y=4 : Ball
+;; A=X
+;; Y=0 : Player0
+;; Y=1 : Player1
+;; Y=2 : Missile0
+;; Y=3 : Missile1
+;; Y=4 : Ball
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 PositionObjectX:
     sta WSYNC
@@ -76,7 +76,7 @@ PositionObjectX:
 
     rts
 
-PositionPlayerY:
+PrintScanlines:
     ldx #192
 .Scanline:
     txa
@@ -114,7 +114,7 @@ Overscan:
     rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Lookup Tables
+;; Lookup Tables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 PlayerBitmap:
     byte #%00000000
@@ -141,7 +141,7 @@ PlayerColor:
     byte #$48
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; IO
+;; IO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 IO: 
 .PlayerUp:
@@ -176,7 +176,7 @@ IO:
     rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; App
+;; App
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Start:
     CLEAN_START
@@ -196,11 +196,11 @@ Start:
 Main:
     jsr VerticalSync
     jsr VerticalBlank
-    jsr PositionPlayerY
+    jsr PrintScanlines
     jsr Overscan
     jsr IO
     jmp Main
 
     org $FFFC
-    .word Start
-    .word Start
+    word Start
+    word Start
