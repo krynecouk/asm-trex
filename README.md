@@ -1,8 +1,10 @@
 # asm-trex
 
-T-Rex can't even write assembly code for Atari 2600 (MOS 6507)... but can anxiously walk here and there on the deserted island in the middle of the ocean!!?#\$%
+Little T-Rex anxiously walking here and there.
 
 ![Living and walking T-Rex](living-walking-trex.gif)
+
+Written for Atari 2600 VCS in 6502 Assembly language.
 
 ## Prerequisites
 
