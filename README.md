@@ -8,9 +8,9 @@ Written for Atari 2600 VCS in 6502 Assembly language.
 
 ## Prerequisites
 
-- [CMake](https://cmake.org/)
 - [dasm](https://dasm-assembler.github.io/)
 - [Stella](https://stella-emu.github.io/)
+- `make` (platform specific)
 
 ## Compilation
 
